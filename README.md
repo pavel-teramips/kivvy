@@ -1,42 +1,66 @@
 # Kivvy
 
-A popup-grid window snapper for KDE Plasma, inspired by [Divvy on Windows/Mac](https://mizage.com/divvy/).
+A [Divvy](https://mizage.com/divvy/)-style popup-grid window snapper for **KDE Plasma**.
 
-Press a global shortcut → a small grid panel appears centered on screen → click and drag across cells → release → the focused window snaps to the corresponding proportional region of the screen.
+Press a global shortcut → a small grid panel appears centered on screen → click and drag across the grid → release → the focused window snaps to that proportional region of the screen.
 
-## Status
+## Why "Kivvy"
 
-v0.1 — initial single-monitor build for Plasma 5.27.
+K for KDE. It's a KWin script — KDE-only by design. Won't work on GNOME or any other desktop (those use different window managers with their own extension APIs).
 
-- Shortcut: `Meta+\`` (Win + backtick)
-- Grid: 6 columns × 4 rows
-- Panel size: 600×400 px
+| Desktop | Backend | Status |
+|---|---|---|
+| **KDE Plasma 5** | X11 | ✓ tested (Plasma 5.27.12 on Kubuntu 24.04) |
+| **KDE Plasma 5** | Wayland | should work, untested |
+| **KDE Plasma 6** | X11 / Wayland | needs ~10 lines of porting (see below) |
+| GNOME / Hyprland / sway / i3 / XFCE | anything | not supported, won't be |
 
 ## Install
 
 ```sh
-ln -s "$PWD" ~/.local/share/kwin/scripts/kivvy
-```
-
-Then enable in **System Settings → Window Management → KWin Scripts**, or via:
-
-```sh
+git clone https://github.com/pavel-teramips/kivvy.git ~/dev/kivvy
+ln -s ~/dev/kivvy ~/.local/share/kwin/scripts/kivvy
 kwriteconfig5 --file kwinrc --group Plugins --key kivvyEnabled true
 qdbus org.kde.KWin /KWin reconfigure
 ```
 
-Bind a shortcut via **System Settings → Shortcuts → KWin → "Kivvy: open grid"** (or accept the default).
+Or enable through **System Settings → Window Management → KWin Scripts → Get New…** once Kivvy is published there. Log out and back in once after enabling to ensure KWin picks up the script source.
 
-## Trigger from the command line
+## Use
 
+Default shortcut: **Meta + \`** (Win + backtick).
+
+You can rebind it under **System Settings → Shortcuts → KWin → Kivvy: open grid**.
+
+Click and drag a rectangle across the 6×4 grid in the popup panel, then release — the focused window snaps to that proportional region of your screen. Esc or right-click cancels.
+
+To trigger from the command line (useful while iterating):
 ```sh
 qdbus org.kde.kglobalaccel /component/kwin invokeShortcut Kivvy
 ```
 
-## Plasma 6 notes
+## v0.1 limits
 
-Tested against Plasma 5.27.x. Needs minor changes for Plasma 6:
+- 6 × 4 grid, hardcoded
+- Single monitor (panel always opens on the active screen, but no cross-monitor drag yet)
+- One shortcut for the panel; no per-region shortcuts like `Meta+Alt+Left → snap left half`
+- No config UI
 
-- `workspace.activeClient` → `workspace.activeWindow`
-- `client.geometry =` → `client.frameGeometry =`
-- Drop version numbers from `org.kde.kwin 2.0` / `org.kde.plasma.core 2.0` imports
+## Plasma 6 port notes
+
+Three small renames in `contents/ui/main.qml`:
+
+| Plasma 5 | Plasma 6 |
+|---|---|
+| `workspace.activeClient` | `workspace.activeWindow` |
+| `client.geometry = …` | `client.frameGeometry = …` |
+| `import org.kde.kwin 2.0` | `import org.kde.kwin` |
+| `import org.kde.plasma.core 2.0 as PlasmaCore` | `import org.kde.plasma.core as PlasmaCore` |
+
+## Credits
+
+Modeled on [Divvy](https://mizage.com/divvy/) (Mizage) for macOS and Windows. KWin script plumbing patterns cribbed from [KZones v0.6](https://github.com/gerritdevriese/kzones/tree/v0.6), which is the closest existing Plasma 5 KWin overlay script.
+
+## License
+
+MIT.
