@@ -1,0 +1,23 @@
+{
+    "KPackageStructure": "KWin/Script",
+    "KPlugin": {
+        "Authors": [
+            {"Name": "pavelr"}
+        ],
+        "Category": "Window Behavior",
+        "Description": "Popup-grid window snapping for KDE (Divvy-style)",
+        "EnabledByDefault": false,
+        "Icon": "preferences-desktop-virtual",
+        "Id": "kivvy",
+        "License": "MIT",
+        "Name": "Kivvy",
+        "ServiceTypes": [
+            "KWin/Script"
+        ],
+        "Version": "0.1"
+    },
+    "X-KDE-ConfigModule": "kwin/effects/configs/kcm_kwin4_genericscripted",
+    "X-KDE-PluginKeyword": "kivvy",
+    "X-Plasma-API": "declarativescript",
+    "X-Plasma-MainScript": "ui/main.qml"
+}
