@@ -42,7 +42,12 @@ If the shortcut does nothing right after install, log out and back in once so KW
 
 Default shortcut: **Meta + \`** (Win + backtick).
 
-You can rebind it under **System Settings → Shortcuts → KWin → Kivvy: open grid**.
+Non-Latin layouts (Hebrew, Arabic, …) don't have a backtick key, and KDE's
+shortcut fallback doesn't cover symbol keys — so the same physical top-left key
+is also bound on **Meta + ;** (which is what that key emits under the Hebrew
+layout). Either opens the grid.
+
+You can rebind both under **System Settings → Shortcuts → KWin** ("Kivvy: open grid" and "… (alternate key)").
 
 Click and drag a rectangle across the grid in the popup panel, then release — the focused window snaps to that proportional region of your screen. Esc or right-click cancels.
 

@@ -57,6 +57,14 @@ Item {
         dragging = false
     }
 
+    function toggle() {
+        if (dialog.visible) {
+            hideOverlay()
+        } else {
+            showOverlay()
+        }
+    }
+
     // px,py in panel-local pixels → grid cell
     function cellAt(px, py) {
         var c = Math.floor(px / cellPx)
@@ -89,22 +97,30 @@ Item {
 
     Component.onCompleted: {
         loadConfig()
-        log("loaded (build v7) cols=" + cols + " rows=" + rows + " cellPx=" + cellPx)
+        log("loaded (build v8) cols=" + cols + " rows=" + rows + " cellPx=" + cellPx)
     }
 
     // Global shortcut: Plasma 6 uses a declarative ShortcutHandler instead of
     // the old KWin.registerShortcut(...) callback.
+    //
+    // KDE matches global shortcuts by keysym, and its Latin-layout fallback only
+    // covers letters/digits — not symbol keys like grave. Under a non-Latin
+    // layout the backtick key emits a different symbol (e.g. semicolon on the
+    // Hebrew layout), so Meta+` alone wouldn't fire. We register a second binding
+    // on Meta+; so the same physical (top-left) key toggles the grid in both the
+    // US and Hebrew layouts.
     ShortcutHandler {
         name: "Kivvy"
         text: "Kivvy: open grid"
         sequence: "Meta+`"
-        onActivated: {
-            if (dialog.visible) {
-                hideOverlay()
-            } else {
-                showOverlay()
-            }
-        }
+        onActivated: root.toggle()
+    }
+
+    ShortcutHandler {
+        name: "Kivvy (alternate key)"
+        text: "Kivvy: open grid (alternate key, e.g. Hebrew layout)"
+        sequence: "Meta+;"
+        onActivated: root.toggle()
     }
 
     PlasmaCore.Dialog {
