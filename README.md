@@ -10,21 +10,33 @@ K for KDE. It's a KWin script — KDE-only by design. Won't work on GNOME or any
 
 | Desktop | Backend | Status |
 |---|---|---|
-| **KDE Plasma 5** | X11 | ✓ tested (Plasma 5.27.12 on Kubuntu 24.04) |
-| **KDE Plasma 5** | Wayland | should work, untested |
-| **KDE Plasma 6** | X11 / Wayland | needs ~10 lines of porting (see below) |
+| **KDE Plasma 6** | Wayland | ✓ tested (Plasma 6.6.4) |
+| **KDE Plasma 6** | X11 | should work, untested |
+| **KDE Plasma 5** | X11 / Wayland | needs a small reverse port (see below) |
 | GNOME / Hyprland / sway / i3 / XFCE | anything | not supported, won't be |
 
 ## Install
 
 ```sh
 git clone https://github.com/pavel-teramips/kivvy.git ~/dev/kivvy
-ln -s ~/dev/kivvy ~/.local/share/kwin/scripts/kivvy
-kwriteconfig5 --file kwinrc --group Plugins --key kivvyEnabled true
-qdbus org.kde.KWin /KWin reconfigure
+~/dev/kivvy/install.sh
 ```
 
-Or enable through **System Settings → Window Management → KWin Scripts → Get New…** once Kivvy is published there. Log out and back in once after enabling to ensure KWin picks up the script source.
+`install.sh` symlinks the repo into `~/.local/share/kwin/scripts/`, enables the
+script, and hot-reloads KWin — so it works on Wayland without logging out, and
+you can re-run it any time after pulling changes. `uninstall.sh` reverses it.
+
+<details>
+<summary>Manual install (what the script does)</summary>
+
+```sh
+ln -s ~/dev/kivvy ~/.local/share/kwin/scripts/kivvy
+kwriteconfig6 --file kwinrc --group Plugins --key kivvyEnabled true
+qdbus6 org.kde.KWin /KWin reconfigure
+```
+</details>
+
+If the shortcut does nothing right after install, log out and back in once so KWin picks up the script source.
 
 ## Use
 
@@ -36,7 +48,7 @@ Click and drag a rectangle across the 6×4 grid in the popup panel, then release
 
 To trigger from the command line (useful while iterating):
 ```sh
-qdbus org.kde.kglobalaccel /component/kwin invokeShortcut Kivvy
+qdbus6 org.kde.kglobalaccel /component/kwin invokeShortcut Kivvy
 ```
 
 ## v0.1 limits
@@ -46,16 +58,18 @@ qdbus org.kde.kglobalaccel /component/kwin invokeShortcut Kivvy
 - One shortcut for the panel; no per-region shortcuts like `Meta+Alt+Left → snap left half`
 - No config UI
 
-## Plasma 6 port notes
+## Plasma 5 reverse-port notes
 
-Three small renames in `contents/ui/main.qml`:
+Kivvy targets Plasma 6. To run it on Plasma 5, reverse these changes in
+`contents/ui/main.qml`:
 
-| Plasma 5 | Plasma 6 |
+| Plasma 6 (current) | Plasma 5 |
 |---|---|
-| `workspace.activeClient` | `workspace.activeWindow` |
-| `client.geometry = …` | `client.frameGeometry = …` |
-| `import org.kde.kwin 2.0` | `import org.kde.kwin` |
-| `import org.kde.plasma.core 2.0 as PlasmaCore` | `import org.kde.plasma.core as PlasmaCore` |
+| `import org.kde.kwin` | `import org.kde.kwin 2.0` |
+| `import org.kde.plasma.core as PlasmaCore` | `import org.kde.plasma.core 2.0 as PlasmaCore` |
+| `Workspace.activeWindow` | `workspace.activeClient` |
+| `client.frameGeometry = …` | `client.geometry = …` |
+| `ShortcutHandler { … }` element | `KWin.registerShortcut(…)` in `Component.onCompleted` |
 
 ## Credits
 
