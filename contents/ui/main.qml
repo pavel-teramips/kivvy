@@ -5,10 +5,10 @@ import org.kde.kwin
 Item {
     id: root
 
-    // ---- config (hardcoded for v1) ----
-    readonly property int cols: 6
-    readonly property int rows: 4
-    readonly property int cellPx: 100
+    // ---- config (read from the KWin Scripts settings UI; see contents/config) ----
+    property int cols: 6
+    property int rows: 4
+    property int cellPx: 100
     readonly property int panelW: cols * cellPx
     readonly property int panelH: rows * cellPx
     readonly property color cellFill: "#33ffffff"
@@ -28,7 +28,14 @@ Item {
 
     function log(msg) { console.log("Kivvy: " + msg) }
 
+    function loadConfig() {
+        cols   = KWin.readConfig("Cols", 6)
+        rows   = KWin.readConfig("Rows", 4)
+        cellPx = KWin.readConfig("CellSize", 100)
+    }
+
     function showOverlay() {
+        loadConfig()
         // Always show the panel, even if there's no valid target. If targetClient
         // is null on release, applySelection is a no-op (panel just closes).
         var c = Workspace.activeWindow
@@ -81,7 +88,8 @@ Item {
     }
 
     Component.onCompleted: {
-        log("loaded (build v6 — Plasma 6 port)")
+        loadConfig()
+        log("loaded (build v7) cols=" + cols + " rows=" + rows + " cellPx=" + cellPx)
     }
 
     // Global shortcut: Plasma 6 uses a declarative ShortcutHandler instead of
