@@ -44,19 +44,23 @@ Default shortcut: **Meta + \`** (Win + backtick).
 
 You can rebind it under **System Settings → Shortcuts → KWin → Kivvy: open grid**.
 
-Click and drag a rectangle across the 6×4 grid in the popup panel, then release — the focused window snaps to that proportional region of your screen. Esc or right-click cancels.
+Click and drag a rectangle across the grid in the popup panel, then release — the focused window snaps to that proportional region of your screen. Esc or right-click cancels.
 
 To trigger from the command line (useful while iterating):
 ```sh
 qdbus6 org.kde.kglobalaccel /component/kwin invokeShortcut Kivvy
 ```
 
-## v0.1 limits
+## Configure
 
-- 6 × 4 grid, hardcoded
+Set the grid columns, rows, and on-screen cell size under **System Settings →
+Window Management → KWin Scripts → Kivvy** (the gear/configure icon next to the
+entry). Defaults are a 6 × 4 grid at 100 px per cell.
+
+## Limits
+
 - Single monitor (panel always opens on the active screen, but no cross-monitor drag yet)
 - One shortcut for the panel; no per-region shortcuts like `Meta+Alt+Left → snap left half`
-- No config UI
 
 ## Plasma 5 reverse-port notes
 
