@@ -25,8 +25,9 @@ Item {
     property int dragCol: -1
     property int dragRow: -1
     property bool dragging: false
+    property bool configMode: false
 
-    readonly property string build: "v10"
+    readonly property string build: "v11"
 
     function log(msg) { console.log("Kivvy: " + msg) }
 
@@ -37,7 +38,10 @@ Item {
     }
 
     function showOverlay() {
-        loadConfig()
+        // Config is loaded once at script load (Component.onCompleted), NOT here —
+        // so an in-panel live tweak survives reopening the grid. A change made in
+        // the System Settings KCM reloads the whole script, which re-runs loadConfig.
+        configMode = false
         // Always show the panel, even if there's no valid target. If targetClient
         // is null on release, applySelection is a no-op (panel just closes).
         var c = Workspace.activeWindow
@@ -57,6 +61,7 @@ Item {
         dialog.visible = false
         targetClient = null
         dragging = false
+        configMode = false
     }
 
     function toggle() {
@@ -67,18 +72,8 @@ Item {
         }
     }
 
-    // A sandboxed KWin script can't launch System Settings directly (kcmshell /
-    // systemsettings aren't DBus-activatable), but KRunner is. Seed it with the
-    // "KWin Scripts" KCM so the Kivvy config is one keystroke away.
-    function openConfig() {
-        kcmLauncher.service = "org.kde.krunner"
-        kcmLauncher.path = "/App"
-        kcmLauncher.method = "query"
-        kcmLauncher.arguments = ["KWin Scripts"]
-        kcmLauncher.call()
-    }
-
-    DBusCall { id: kcmLauncher }
+    // Clamp a config value and keep it in range as the user steps it.
+    function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v) }
 
     // px,py in panel-local pixels → grid cell
     function cellAt(px, py) {
@@ -195,28 +190,109 @@ Item {
                 }
             }
 
-            // Corner controls — sit above the drag MouseArea so they grab their
-            // own clicks. Mouse-driven so they work even when the overlay can't
-            // hold keyboard focus on Wayland.
+            // In-panel size editor (shown when configMode). Live tweak — applies
+            // instantly, session-only (a KWin script can't persist config; the
+            // permanent defaults live in System Settings → KWin Scripts → Kivvy).
+            Rectangle {
+                visible: root.configMode
+                z: 20
+                anchors.fill: parent
+                radius: 6
+                color: "#ee1a1a1a"
+
+                // swallow drag clicks so they don't fall through to the grid
+                MouseArea { anchors.fill: parent }
+
+                Column {
+                    anchors.centerIn: parent
+                    spacing: 8
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: "Grid size"; color: "white"; font.pixelSize: 15; font.bold: true
+                    }
+
+                    component Stepper: Row {
+                        spacing: 6
+                        property string label: ""
+                        property int value: 0
+                        property int step: 1
+                        signal changed(int delta)
+                        Text {
+                            text: label; color: "white"; width: 78; height: 28
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        Rectangle {
+                            width: 28; height: 28; radius: 4; color: minusM.containsMouse ? "#555" : "#3a3a3a"
+                            border.color: "#888"; border.width: 1
+                            Text { anchors.centerIn: parent; text: "−"; color: "white"; font.pixelSize: 18 }
+                            MouseArea { id: minusM; anchors.fill: parent; hoverEnabled: true; onClicked: parent.parent.changed(-parent.parent.step) }
+                        }
+                        Text {
+                            text: value; color: "white"; width: 46; height: 28
+                            horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
+                            font.pixelSize: 15
+                        }
+                        Rectangle {
+                            width: 28; height: 28; radius: 4; color: plusM.containsMouse ? "#555" : "#3a3a3a"
+                            border.color: "#888"; border.width: 1
+                            Text { anchors.centerIn: parent; text: "+"; color: "white"; font.pixelSize: 16 }
+                            MouseArea { id: plusM; anchors.fill: parent; hoverEnabled: true; onClicked: parent.parent.changed(parent.parent.step) }
+                        }
+                    }
+
+                    Stepper {
+                        label: "Columns"; value: root.cols; step: 1
+                        onChanged: root.cols = root.clamp(root.cols + delta, 1, 16)
+                    }
+                    Stepper {
+                        label: "Rows"; value: root.rows; step: 1
+                        onChanged: root.rows = root.clamp(root.rows + delta, 1, 16)
+                    }
+                    Stepper {
+                        label: "Cell size"; value: root.cellPx; step: 10
+                        onChanged: root.cellPx = root.clamp(root.cellPx + delta, 40, 300)
+                    }
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        horizontalAlignment: Text.AlignHCenter
+                        text: "applies now · resets on reload\npermanent defaults in System Settings"
+                        color: "#999"; font.pixelSize: 10
+                    }
+
+                    Rectangle {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: 70; height: 28; radius: 4
+                        color: doneM.containsMouse ? "#5dbef5" : "#3daee9"
+                        Text { anchors.centerIn: parent; text: "Done"; color: "white"; font.bold: true }
+                        MouseArea { id: doneM; anchors.fill: parent; hoverEnabled: true; onClicked: root.configMode = false }
+                    }
+                }
+            }
+
+            // Corner controls — sit above the drag MouseArea (and the editor) so
+            // they grab their own clicks. Mouse-driven so they work even when the
+            // overlay can't hold keyboard focus on Wayland.
             Row {
-                z: 10
+                z: 30
                 anchors.top: parent.top
                 anchors.right: parent.right
                 anchors.topMargin: 6
                 anchors.rightMargin: 6
                 spacing: 4
 
-                // Configure — opens the KWin Scripts settings via KRunner.
+                // Configure — toggles the in-panel size editor.
                 Rectangle {
                     width: 26; height: 26; radius: 5
-                    color: cfgMouse.containsMouse ? "#5dbef5" : "#3daee9"
+                    color: (cfgMouse.containsMouse || root.configMode) ? "#5dbef5" : "#3daee9"
                     border.color: "white"; border.width: 1
                     Text { anchors.centerIn: parent; text: "⚙"; color: "white"; font.pixelSize: 15; font.bold: true }
                     MouseArea {
                         id: cfgMouse
                         anchors.fill: parent
                         hoverEnabled: true
-                        onClicked: { root.openConfig(); root.hideOverlay() }
+                        onClicked: root.configMode = !root.configMode
                     }
                 }
 

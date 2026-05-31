@@ -49,7 +49,7 @@ layout). Either opens the grid.
 
 You can rebind both under **System Settings → Shortcuts → KWin** ("Kivvy: open grid" and "… (alternate key)").
 
-Click and drag a rectangle across the grid in the popup panel, then release — the focused window snaps to that proportional region of your screen. Esc or right-click cancels.
+Click and drag a rectangle across the grid in the popup panel, then release — the focused window snaps to that proportional region of your screen. The **✕** button (top-right of the panel), Esc, or right-click cancels without snapping.
 
 To trigger from the command line (useful while iterating):
 ```sh
@@ -58,9 +58,15 @@ qdbus6 org.kde.kglobalaccel /component/kwin invokeShortcut Kivvy
 
 ## Configure
 
-Set the grid columns, rows, and on-screen cell size under **System Settings →
-Window Management → KWin Scripts → Kivvy** (the gear/configure icon next to the
-entry). Defaults are a 6 × 4 grid at 100 px per cell.
+**Permanent defaults** — set the grid columns, rows, and on-screen cell size under
+**System Settings → Window Management → KWin Scripts → Kivvy** (the gear/configure
+icon next to the entry). Defaults are a 6 × 4 grid at 100 px per cell.
+
+**Quick tweak** — the **⚙** button (top-right of the popup) opens an in-panel
+editor with −/+ steppers for columns, rows, and cell size. Changes apply
+instantly so you can see them, but are **session-only**: a KWin script can't
+persist its own settings, so they reset on the next reload/login. Use the System
+Settings page above for values that should stick.
 
 ## Limits
 
