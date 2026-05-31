@@ -26,6 +26,8 @@ Item {
     property int dragRow: -1
     property bool dragging: false
 
+    readonly property string build: "v10"
+
     function log(msg) { console.log("Kivvy: " + msg) }
 
     function loadConfig() {
@@ -46,7 +48,7 @@ Item {
         dialog.visible = true
         rootItem.forceActiveFocus()
         var tgt = targetClient ? targetClient.resourceClass.toString() : "(none)"
-        log("panel shown screen=" + (screen ? screen.name : "?") + " area=" + area.x + "," + area.y + " "
+        log("panel shown [" + build + "] screen=" + (screen ? screen.name : "?") + " area=" + area.x + "," + area.y + " "
             + area.width + "x" + area.height + " panel=" + panelW + "x" + panelH
             + " target=" + tgt)
     }
@@ -64,6 +66,19 @@ Item {
             showOverlay()
         }
     }
+
+    // A sandboxed KWin script can't launch System Settings directly (kcmshell /
+    // systemsettings aren't DBus-activatable), but KRunner is. Seed it with the
+    // "KWin Scripts" KCM so the Kivvy config is one keystroke away.
+    function openConfig() {
+        kcmLauncher.service = "org.kde.krunner"
+        kcmLauncher.path = "/App"
+        kcmLauncher.method = "query"
+        kcmLauncher.arguments = ["KWin Scripts"]
+        kcmLauncher.call()
+    }
+
+    DBusCall { id: kcmLauncher }
 
     // px,py in panel-local pixels → grid cell
     function cellAt(px, py) {
@@ -97,7 +112,7 @@ Item {
 
     Component.onCompleted: {
         loadConfig()
-        log("loaded (build v8) cols=" + cols + " rows=" + rows + " cellPx=" + cellPx)
+        log("loaded (build " + build + ") cols=" + cols + " rows=" + rows + " cellPx=" + cellPx)
     }
 
     // Global shortcut: Plasma 6 uses a declarative ShortcutHandler instead of
@@ -176,6 +191,46 @@ Item {
                         color: inSel ? root.selFill : root.cellFill
                         border.color: inSel ? root.selStroke : root.cellStroke
                         border.width: 1
+                    }
+                }
+            }
+
+            // Corner controls — sit above the drag MouseArea so they grab their
+            // own clicks. Mouse-driven so they work even when the overlay can't
+            // hold keyboard focus on Wayland.
+            Row {
+                z: 10
+                anchors.top: parent.top
+                anchors.right: parent.right
+                anchors.topMargin: 6
+                anchors.rightMargin: 6
+                spacing: 4
+
+                // Configure — opens the KWin Scripts settings via KRunner.
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: cfgMouse.containsMouse ? "#5dbef5" : "#3daee9"
+                    border.color: "white"; border.width: 1
+                    Text { anchors.centerIn: parent; text: "⚙"; color: "white"; font.pixelSize: 15; font.bold: true }
+                    MouseArea {
+                        id: cfgMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: { root.openConfig(); root.hideOverlay() }
+                    }
+                }
+
+                // Cancel — closes without snapping.
+                Rectangle {
+                    width: 26; height: 26; radius: 5
+                    color: cancelMouse.containsMouse ? "#e85c5c" : "#da4453"
+                    border.color: "white"; border.width: 1
+                    Text { anchors.centerIn: parent; text: "✕"; color: "white"; font.pixelSize: 14; font.bold: true }
+                    MouseArea {
+                        id: cancelMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: root.hideOverlay()
                     }
                 }
             }
