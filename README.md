@@ -1,8 +1,12 @@
-# Kivvy
+# Kivvy — Divvy-style window snapping for KDE Plasma
 
-A [Divvy](https://mizage.com/divvy/)-style popup-grid window snapper for **KDE Plasma**.
+**Kivvy is "Divvy for KDE"** — a popup-grid window snapper for **KDE Plasma 6**, built as a KWin script.
 
-Press a global shortcut → a small grid panel appears centered on screen → click and drag across the grid → release → the focused window snaps to that proportional region of the screen.
+Press a global shortcut → a small grid panel pops up centered on screen → click and drag a rectangle across the grid → release → the focused window snaps to that proportional region of the screen.
+
+If you've used [**Divvy**](https://mizage.com/divvy/), **Rectangle**, or **Magnet** on macOS and miss that click-and-drag-on-a-grid workflow on Linux — or you just want a lighter, popup-grid alternative to KWin's built-in tiling or [KZones](https://github.com/gerritdevriese/kzones) — that's what Kivvy does.
+
+> Independent project — not affiliated with, or endorsed by, Mizage (the makers of Divvy). "Divvy" is their trademark; Kivvy just borrows the interaction.
 
 ## Why "Kivvy"
 
