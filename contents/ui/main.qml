@@ -27,7 +27,7 @@ Item {
     property bool dragging: false
     property bool configMode: false
 
-    readonly property string build: "v11"
+    readonly property string build: "v12"
 
     function log(msg) { console.log("Kivvy: " + msg) }
 
@@ -46,7 +46,13 @@ Item {
         // is null on release, applySelection is a no-op (panel just closes).
         var c = Workspace.activeWindow
         targetClient = (c && c.normalWindow) ? c : null
-        var screen = Workspace.activeScreen
+        // Multi-monitor: use the *target window's* output, not Workspace.activeScreen.
+        // The active screen (cursor/focus screen) isn't necessarily the one the
+        // focused window lives on — when they differ, the grid would map onto the
+        // wrong monitor and the window would snap to the wrong place/size. Fall back
+        // to the active screen only when there's no target window to anchor to.
+        var screen = (targetClient && targetClient.output) ? targetClient.output
+                                                           : Workspace.activeScreen
         area = Workspace.clientArea(KWin.MaximizeArea, screen, Workspace.currentDesktop)
         pressCol = -1; pressRow = -1; dragCol = -1; dragRow = -1; dragging = false
         dialog.visible = true
