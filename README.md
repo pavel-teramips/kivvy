@@ -35,8 +35,19 @@ git clone https://github.com/pavel-teramips/kivvy.git ~/dev/kivvy
 ```
 
 `install.sh` symlinks the repo into `~/.local/share/kwin/scripts/`, enables the
-script, and hot-reloads KWin — so it works on Wayland without logging out, and
-you can re-run it any time after pulling changes. `uninstall.sh` reverses it.
+script, loads it, and claims the **Meta + `** shortcut — taking it from KDE's
+default "Walk Through Windows of Current Application" if needed (that action keeps
+its **Alt + `** binding). `uninstall.sh` reverses it and frees the shortcuts.
+
+Run interactively, `install.sh` asks before reassigning a key that's already in
+use; run non-interactively it takes the key. Automatic shortcut setup needs
+`gdbus` (ships with GLib, present on any Plasma desktop); without it, bind
+"Kivvy: open grid" yourself under System Settings → Shortcuts → KWin.
+
+> **Updating later:** `git pull` then re-run `install.sh` refreshes the symlink and
+> shortcuts, but KWin caches compiled QML for the life of the session — so changes
+> to `contents/ui/main.qml` only take effect after you **log out and back in** (or
+> restart KWin). This is a KWin limitation; there's no in-session way around it.
 
 <details>
 <summary>Manual install (what the script does)</summary>
@@ -82,7 +93,7 @@ Settings page above for values that should stick.
 
 ## Limits
 
-- Single monitor (panel always opens on the active screen, but no cross-monitor drag yet)
+- Multi-monitor aware: the grid opens on, and snaps within, the monitor the focused window is on. A single drag still can't span two monitors — each snap stays on one screen.
 - One shortcut for the panel; no per-region shortcuts like `Meta+Alt+Left → snap left half`
 
 ## Plasma 5 reverse-port notes
